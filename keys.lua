@@ -3,19 +3,21 @@ local gears = require("gears")
 
 local vars = require("vars")
 
+
 local M = {}
+
 
 M.modkey = "Mod4"
 
 M.global_keys = gears.table.join(
     -- Tags.
     awful.key(
-        { M.modkey, "Shift" }, "h",
+        { M.modkey, "Shift" }, "[",
         awful.tag.viewprev,
         { description = "Previous tab.", group = "Tags" }
     ),
     awful.key(
-        { M.modkey, "Shift" }, "l",
+        { M.modkey, "Shift" }, "]",
         awful.tag.viewnext,
         { description = "View next.", group = "Tags" }
     ),
@@ -154,61 +156,75 @@ M.global_keys = gears.table.join(
     --   {description = "show the menubar", group = "launcher"})
 )
 
-for i = 1, 9 do
+local tag_id_to_key = {
+    -- Access the first 3 tags with 1,2,3 (left hand).
+    [1] = 1,
+    [2] = 2,
+    [3] = 3,
+
+    -- Access the last 3 tags with 8,9,0 (right hand).
+    [4] = 8,
+    [5] = 9,
+    [6] = 0,
+}
+
+for tag_id = 1, 6 do
+    local key = tostring(tag_id_to_key[tag_id])
     M.global_keys = gears.table.join(
         M.global_keys,
 
         -- View tag only.
-        awful.key({ M.modkey }, "#" .. i + 9,
+        awful.key({ M.modkey }, key,
             function ()
                 local screen = awful.screen.focused()
-                local tag = screen.tags[i]
+                local tag = screen.tags[tag_id]
                 if tag then
                     tag:view_only()
                 end
             end,
-            { description = "view tag #" .. i, group = "tag" }
+            { description = "view tag #" .. tag_id, group = "tag" }
         ),
 
         -- Toggle tag display.
-        awful.key({ M.modkey, "Control" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Control" }, key,
             function ()
                 local screen = awful.screen.focused()
-                local tag = screen.tags[i]
+                local tag = screen.tags[tag_id]
                 if tag then
                     awful.tag.viewtoggle(tag)
                 end
             end,
-            { description = "toggle tag #" .. i, group = "tag" }
+            { description = "toggle tag #" .. tag_id, group = "tag" }
         ),
 
         -- Move client to tag.
-        awful.key({ M.modkey, "Shift" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Shift" }, key,
             function ()
                 if client.focus then
-                    local tag = client.focus.screen.tags[i]
+                    local tag = client.focus.screen.tags[tag_id]
                     if tag then
                         client.focus:move_to_tag(tag)
                     end
                 end
             end,
-            { description = "move focused client to tag #"..i, group = "tag" }
+            { description = "move focused client to tag #"..tag_id, group = "tag" }
         ),
 
         -- Toggle tag on focused client.
-        awful.key({ M.modkey, "Control", "Shift" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Control", "Shift" }, key,
             function ()
                 if client.focus then
-                    local tag = client.focus.screen.tags[i]
+                    local tag = client.focus.screen.tags[tag_id]
                     if tag then
                         client.focus:toggle_tag(tag)
                     end
                 end
             end,
-            { description = "toggle focused client on tag #" .. i, group = "tag" }
+            { description = "toggle focused client on tag #" .. tag_id, group = "tag" }
         )
     )
 end
+
 
 return M
 

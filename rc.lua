@@ -48,7 +48,7 @@ require("error_handling")
 
 
 
-beautiful.init(os.getenv("XDG_CONFIG_HOME") .. "/awesome/theme/theme.lua")
+beautiful.init(vars.theme_dir .. "/theme.lua")
 
 
 
@@ -85,24 +85,24 @@ local my_launcher = awful.widget.launcher({
 -- Create a wibox for each screen and add it ???????????????????
 -- function button.new(mod, _button, press, release)
 local taglist_buttons = gears.table.join(
-  awful.button({ }, 1, function(t) t:view_only() end),
-  awful.button({ keys.modkey }, 1, function(t)
+  awful.button({ }, 1, function(tag) tag:view_only() end),
+  awful.button({ keys.modkey }, 1, function(tag)
     if client.focus then
-      client.focus:move_to_tag(t)
+      client.focus:move_to_tag(tag)
     end
   end),
   awful.button({ }, 3, awful.tag.viewtoggle),
-  awful.button({ keys.modkey }, 3, function(t)
+  awful.button({ keys.modkey }, 3, function(tag)
     if client.focus then
-      client.focus:toggle_tag(t)
+      client.focus:toggle_tag(tag)
     end
   end),
-  awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
-  awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
+  awful.button({ }, 4, function(tag) awful.tag.viewnext(tag.screen) end),
+  awful.button({ }, 5, function(tag) awful.tag.viewprev(tag.screen) end)
 )
 
 local tasklist_buttons = gears.table.join(
-  awful.button({ }, 1, function (current_client)
+  awful.button({ }, 1, function(current_client)
     if current_client == client.focus then
       current_client.minimized = true
     else
@@ -148,10 +148,27 @@ awful.screen.connect_for_each_screen(function(current_screen)
   set_wallpaper(current_screen)
 
   -- Each screen has its own tag table.
-  awful.tag({ "1", "2", "3", "4", "5", "6" }, current_screen, awful.layout.layouts[1])
+  -- https://awesomewm.org/doc/api/classes/tag.html#
+  for _ = 1, 6 do
+    awful.tag.add("", {
+      screen = current_screen,
+      layout = awful.layout.layouts[1],
+      gap = 5, -- Window gap.
+      icon = vars.theme_dir .. "/test/circle_empty.png",
+    })
+  end
+
+  -- Create a taglist widget.
+  current_screen.mytaglist = awful.widget.taglist({
+    screen  = current_screen,
+    filter  = awful.widget.taglist.filter.all,
+    buttons = taglist_buttons
+  })
+
 
   -- Create a promptbox for each screen
   current_screen.mypromptbox = awful.widget.prompt()
+
 
   -- Create an imagebox widget which will contain an icon indicating which layout we're using.
   -- We need one layoutbox per screen.
@@ -163,18 +180,54 @@ awful.screen.connect_for_each_screen(function(current_screen)
     awful.button({ }, 5, function () awful.layout.inc(-1) end)
   ))
 
-  -- Create a taglist widget.
-  current_screen.mytaglist = awful.widget.taglist({
-    screen  = current_screen,
-    filter  = awful.widget.taglist.filter.all,
-    buttons = taglist_buttons
-  })
-
   -- Create a tasklist widget.
   current_screen.mytasklist = awful.widget.tasklist({
     screen  = current_screen,
     filter  = awful.widget.tasklist.filter.currenttags,
-    buttons = tasklist_buttons
+    buttons = tasklist_buttons,
+    style = {
+      shape_border_width = 1,
+      shape_border_color = '#777777',
+      shape  = gears.shape.rectangle,
+    },
+    layout = {
+      spacing = 10,
+      spacing_widget = {
+        {
+          forced_width = 5,
+          shape        = gears.shape.circle,
+          widget       = wibox.widget.separator
+        },
+        valign = 'center',
+        halign = 'center',
+        widget = wibox.container.place,
+      },
+      layout = wibox.layout.fixed.horizontal
+    },
+    widget_template = {
+      {
+        {
+          {
+            {
+              id     = 'icon_role',
+              widget = wibox.widget.imagebox,
+            },
+            margins = 5,
+            widget  = wibox.container.margin,
+          },
+          {
+            id     = 'text_role',
+            widget = wibox.widget.textbox,
+          },
+          layout = wibox.layout.fixed.horizontal,
+        },
+        left  = 10,
+        right = 10,
+        widget = wibox.container.margin
+      },
+      id     = 'background_role',
+      widget = wibox.container.background,
+    },
   })
 
   -- Create the wibox.
