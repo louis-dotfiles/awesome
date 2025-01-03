@@ -3,19 +3,21 @@ local gears = require("gears")
 
 local vars = require("vars")
 
+
 local M = {}
+
 
 M.modkey = "Mod4"
 
 M.global_keys = gears.table.join(
     -- Tags.
     awful.key(
-        { M.modkey, "Shift" }, "h",
+        { M.modkey }, "[",
         awful.tag.viewprev,
         { description = "Previous tab.", group = "Tags" }
     ),
     awful.key(
-        { M.modkey, "Shift" }, "l",
+        { M.modkey }, "]",
         awful.tag.viewnext,
         { description = "View next.", group = "Tags" }
     ),
@@ -154,61 +156,143 @@ M.global_keys = gears.table.join(
     --   {description = "show the menubar", group = "launcher"})
 )
 
-for i = 1, 9 do
+local tag_id_to_key = {
+    -- Access the first 3 tags with 1,2,3 (left hand).
+    [1] = 1,
+    [2] = 2,
+    [3] = 3,
+
+    -- Access the last 3 tags with 8,9,0 (right hand).
+    [4] = 8,
+    [5] = 9,
+    [6] = 0,
+}
+
+for tag_id = 1, 6 do
+    local key = tostring(tag_id_to_key[tag_id])
+
     M.global_keys = gears.table.join(
         M.global_keys,
 
         -- View tag only.
-        awful.key({ M.modkey }, "#" .. i + 9,
+        awful.key({ M.modkey }, key,
             function ()
                 local screen = awful.screen.focused()
-                local tag = screen.tags[i]
+                local tag = screen.tags[tag_id]
                 if tag then
                     tag:view_only()
                 end
             end,
-            { description = "view tag #" .. i, group = "tag" }
+            { description = "View tag #" .. tag_id, group = "tag" }
         ),
 
         -- Toggle tag display.
-        awful.key({ M.modkey, "Control" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Control" }, key,
             function ()
                 local screen = awful.screen.focused()
-                local tag = screen.tags[i]
+                local tag = screen.tags[tag_id]
                 if tag then
                     awful.tag.viewtoggle(tag)
                 end
             end,
-            { description = "toggle tag #" .. i, group = "tag" }
+            { description = "Toggle tag #" .. tag_id, group = "tag" }
         ),
 
         -- Move client to tag.
-        awful.key({ M.modkey, "Shift" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Shift" }, key,
             function ()
                 if client.focus then
-                    local tag = client.focus.screen.tags[i]
+                    local tag = client.focus.screen.tags[tag_id]
                     if tag then
                         client.focus:move_to_tag(tag)
                     end
                 end
             end,
-            { description = "move focused client to tag #"..i, group = "tag" }
+            { description = "Move focused client to tag #" .. tag_id, group = "tag" }
         ),
 
         -- Toggle tag on focused client.
-        awful.key({ M.modkey, "Control", "Shift" }, "#" .. i + 9,
+        awful.key({ M.modkey, "Control", "Shift" }, key,
             function ()
                 if client.focus then
-                    local tag = client.focus.screen.tags[i]
+                    local tag = client.focus.screen.tags[tag_id]
                     if tag then
                         client.focus:toggle_tag(tag)
                     end
                 end
             end,
-            { description = "toggle focused client on tag #" .. i, group = "tag" }
+            { description = "Toggle focused client on tag #" .. tag_id, group = "tag" }
         )
     )
 end
+
+
+M.clientkeys = gears.table.join(
+    awful.key(
+        { M.modkey }, "f",
+        function (c) c.fullscreen = not c.fullscreen c:raise() end,
+        { description = "Toggle fullscreen.", group = "Windowlient" }
+    ),
+
+    awful.key(
+        { M.modkey, "Shift" }, "c",
+        function (c) c:kill() end,
+        { description = "Close.", group = "Window" }
+    ),
+    awful.key(
+        { M.modkey, "Control" }, "space",
+        awful.client.floating.toggle,
+        { description = "Toggle floating.", group = "Window" }
+    ),
+
+    awful.key(
+        { M.modkey, "Control" }, "Return",
+        function (c) c:swap(awful.client.getmaster()) end,
+        { description = "Move to master.", group = "Window" }
+    ),
+
+    awful.key(
+        { M.modkey }, "t",
+        function (c) c.ontop = not c.ontop end,
+        { description = "Toggle keep on top.", group = "Window" }
+    ),
+
+    awful.key(
+        { M.modkey }, "n",
+        function (c)
+            -- The client currently has the input focus, so it cannot be
+            -- minimized, since minimized clients can't have the focus.
+            c.minimized = true
+        end ,
+        { description = "minimize", group = "client" }
+    ),
+
+    awful.key(
+        { M.modkey }, "m",
+        function (c)
+            c.maximized = not c.maximized
+            c:raise()
+        end ,
+        { description = "(un)maximize", group = "client" }),
+
+    awful.key(
+        { M.modkey, "Control" }, "m",
+        function (c)
+            c.maximized_vertical = not c.maximized_vertical
+            c:raise()
+        end ,
+        { description = "(un)maximize vertically", group = "client" }),
+
+    awful.key(
+        { M.modkey, "Shift" }, "m",
+        function (c)
+            c.maximized_horizontal = not c.maximized_horizontal
+            c:raise()
+        end ,
+        { description = "(un)maximize horizontally", group = "client" }
+    )
+)
+
 
 return M
 
